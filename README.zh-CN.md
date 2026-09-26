@@ -69,3 +69,29 @@
 - v1.2.0：触发方式由单击改为双击。
 - v1.2.1：默认规则新增「当前/目标」写法（`1/7`），会平滑升级没改过规则的老配置。
 - v1.2.2：`N/M` 到分母封顶，到顶后只提示不再回写。
+
+## 开发与发版
+
+**仓库根目录就是插件本体**：思源直接加载 `index.js`（CommonJS，`require("siyuan")`），
+不需要编译或构建，改完保存即可生效。完整的版本记录见 `CHANGELOG.md`。
+
+```bash
+python3 scripts/pack.py          # 校验并打出 package.zip
+python3 scripts/pack.py --check  # 只校验，不生成
+```
+
+发版步骤：
+
+1. 改 `plugin.json` 里的 `version`，并在 `CHANGELOG.md` 补一条；
+2. 提交，打一个与版本号一致的 tag 并推送：
+
+   ```bash
+   git tag v1.2.3 && git push origin v1.2.3
+   ```
+
+3. GitHub Actions 会校验 tag 与版本号一致 → 打包 `package.zip` → 发布 Release。
+
+集市索引会在 1–3 小时内自动拉到新版本，**不需要再提 PR**。
+若集市长时间不更新，先看仓库有没有带 `stage-fail` 标签的 issue —— 多半是
+`plugin.json` 的 `version` 没提升，或 tag 与版本号不一致（工作流会直接把这一种拦下来）。
+

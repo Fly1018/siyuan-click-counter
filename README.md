@@ -78,3 +78,31 @@ Rapid double-clicks are queued and summed up, so none are lost. The value never 
 - **v1.2.0** — trigger changed from single click to double-click.
 - **v1.1.0** — removed all debugging scaffolding. The `block not found` reports of v1.0.x were traced to UI-only
   blocks rendered by the AI agent panel and fixed by checking block existence before counting.
+
+## Development & release
+
+**The repository root is the plugin itself** — SiYuan loads `index.js` directly
+(CommonJS, `require("siyuan")`), so there is no build step. See `CHANGELOG.md` for the full history.
+
+```bash
+python3 scripts/pack.py          # validate and build package.zip
+python3 scripts/pack.py --check  # validate only
+```
+
+To publish a new version:
+
+1. bump `version` in `plugin.json` and add an entry to `CHANGELOG.md`;
+2. commit, then push a tag matching that version:
+
+   ```bash
+   git tag v1.2.3 && git push origin v1.2.3
+   ```
+
+3. GitHub Actions verifies the tag matches the manifest version, builds `package.zip`
+   and publishes the release.
+
+The bazaar index picks up new releases within 1–3 hours — **no PR needed**.
+If the bazaar stops updating, check for a `stage-fail` issue in your repo: it is almost
+always a `version` that was not bumped, or a tag that does not match it (the workflow
+blocks that case outright).
+
