@@ -1,0 +1,41 @@
+name: Release
+
+# 打 tag（形如 v1.2.2）时自动打包并发布 Release。
+# 集市索引会自动拉取 Latest Release 里的 package.zip，所以发新版只要推一个 tag。
+#
+# 注意：tag 必须与 plugin.json 里的 version 完全一致（下面第一步就会校验）。
+# 版本号没提升或对不上，是集市 stage-fail 最常见的原因。
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 校验 tag 与 plugin.json 的版本一致
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER="$(python3 -c "import json;print(json.load(open('plugin.json'))['version'])")"
+          echo "tag = ${GITHUB_REF_NAME}"
+          echo "plugin.json version = ${VER}"
+          if [ "$TAG" != "$VER" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} 与 plugin.json 的 version ${VER} 不一致，请改成一致后再发版"
+            exit 1
+          fi
+
+      # 按白名单打包（scripts/、.github/、CHANGELOG.md、LICENSE 等不会进包）
+      - name: 打包 package.zip
+        run: python3 scripts/pack.py
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: package.zip
+          generate_release_notes: true
