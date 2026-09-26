@@ -1,0 +1,28 @@
+name: Release
+
+# 打 tag（形如 v1.2.2）时自动打包 package.zip 并发布 Release，
+# 集市索引会自动拉取 Latest Release 中的 package.zip。
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 把包根的文件打成 package.zip（排除仓库自身的 .git / .github）
+      - name: Build package.zip
+        run: |
+          zip -r package.zip . -x ".git/*" -x ".github/*" -x "package.zip"
+          unzip -l package.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: package.zip
